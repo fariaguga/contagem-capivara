@@ -45,6 +45,10 @@ function vibrar() {
 }
 
 /* ── GPS ── */
+const coordsLat = $('coords-lat');
+const coordsLng = $('coords-lng');
+const coordsAcc = $('coords-accuracy');
+
 function iniciarGPS() {
   if (!('geolocation' in navigator)) {
     gpsTexto.textContent = 'GPS indisponivel';
@@ -57,12 +61,18 @@ function iniciarGPS() {
       gpsAtual.precisao = Math.round(pos.coords.accuracy);
       gpsBadge.classList.remove('inativo');
       gpsBadge.classList.add('ativo');
-      gpsTexto.textContent = `GPS \u00b1${gpsAtual.precisao}m`;
+      gpsTexto.textContent = 'Ativo';
+      coordsLat.textContent = gpsAtual.latitude.toFixed(5);
+      coordsLng.textContent = gpsAtual.longitude.toFixed(5);
+      coordsAcc.textContent = `\u00b1${gpsAtual.precisao}m`;
     },
     () => {
       gpsBadge.classList.remove('ativo');
       gpsBadge.classList.add('inativo');
       gpsTexto.textContent = 'GPS inativo';
+      coordsLat.textContent = '--';
+      coordsLng.textContent = '--';
+      coordsAcc.textContent = '';
     },
     { enableHighAccuracy: true, maximumAge: 10000 }
   );

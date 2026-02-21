@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#F5F7F6">
+  <meta name="theme-color" content="#1B5E20">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Contagem de Capivaras</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png">
@@ -14,24 +14,32 @@
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Header Hero -->
   <header>
-    <div class="header-row">
-      <h1>Contagem de Capivaras</h1>
+    <div class="header-top">
+      <img src="icons/icon-192.png" class="header-logo" alt="Logo">
+      <div class="header-title">Contagem de Capivaras</div>
       <div class="gps-badge inativo" id="gps-badge">
         <span class="gps-dot" id="gps-dot"></span>
         <span id="gps-texto">GPS inativo</span>
       </div>
     </div>
+    <div class="header-hero">
+      <div class="header-greeting">Monitoramento em campo</div>
+      <div class="header-headline" id="header-headline">Localize e registre</div>
+    </div>
+    <div class="header-coords" id="header-coords">
+      <div class="coords-item">
+        <span class="coords-label">Lat</span>
+        <span class="coords-value" id="coords-lat">--</span>
+      </div>
+      <div class="coords-item">
+        <span class="coords-label">Lng</span>
+        <span class="coords-value" id="coords-lng">--</span>
+      </div>
+      <span class="coords-accuracy" id="coords-accuracy"></span>
+    </div>
   </header>
-
-  <!-- Tabs -->
-  <nav class="tabs">
-    <button class="tab-btn ativo" data-tab="areas">Areas</button>
-    <button class="tab-btn" data-tab="contagem">Contagem</button>
-    <button class="tab-btn" data-tab="historico">Historico</button>
-    <button class="tab-btn" data-tab="exportar">Exportar</button>
-  </nav>
 
   <!-- Tela: Areas -->
   <section id="areas" class="secao visivel">
@@ -180,6 +188,39 @@
 
   <!-- Toast -->
   <div id="toast" class="toast"></div>
+
+  <!-- Bottom Tab Bar -->
+  <nav class="tabs">
+    <button class="tab-btn ativo" data-tab="areas">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      <span class="tab-label">Areas</span>
+    </button>
+    <button class="tab-btn" data-tab="contagem">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v8M8 12h8"/>
+      </svg>
+      <span class="tab-label">Contagem</span>
+    </button>
+    <button class="tab-btn" data-tab="historico">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 6v6l4 2"/>
+      </svg>
+      <span class="tab-label">Historico</span>
+    </button>
+    <button class="tab-btn" data-tab="exportar">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <span class="tab-label">Exportar</span>
+    </button>
+  </nav>
 
   <!-- Scripts -->
   <script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>

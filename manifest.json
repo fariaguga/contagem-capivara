@@ -4,8 +4,8 @@
   "description": "Contagem de capivaras em campo — offline-first",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#F5F7F6",
-  "theme_color": "#F5F7F6",
+  "background_color": "#F5F6F5",
+  "theme_color": "#1B5E20",
   "orientation": "portrait",
   "icons": [
     {
