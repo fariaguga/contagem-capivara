@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2e7d32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Contagem de Capivaras</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <h1>Contagem de Capivaras</h1>
+    <div class="status-bar">
+      <div class="gps-status">
+        <span class="gps-dot" id="gps-dot"></span>
+        <span id="gps-texto">GPS aguardando…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="tabs">
+    <button class="tab-btn ativo" data-tab="contagem">Contagem</button>
+    <button class="tab-btn" data-tab="historico">Histórico</button>
+    <button class="tab-btn" data-tab="exportar">Exportar</button>
+  </nav>
+
+  <!-- Tela: Contagem -->
+  <section id="contagem" class="secao visivel">
+    <div id="categorias-grid" class="categorias-grid"></div>
+
+    <button id="btn-mais-um" class="btn-mais-um" disabled>+1</button>
+
+    <div class="registro-quantidade">
+      <input id="input-qtd" type="number" min="1" placeholder="Qtd" inputmode="numeric">
+      <button id="btn-registrar" class="btn-registrar" disabled>Registrar</button>
+    </div>
+
+    <textarea id="input-obs" class="campo-obs" rows="2" placeholder="Observação (opcional)"></textarea>
+
+    <div class="total-dia">
+      <div class="label">Total hoje</div>
+      <div class="numero" id="total-numero">0</div>
+    </div>
+  </section>
+
+  <!-- Tela: Histórico -->
+  <section id="historico" class="secao">
+    <div class="filtro-data">
+      <input type="date" id="input-data">
+      <button id="btn-filtrar-data">Filtrar</button>
+    </div>
+    <ul id="lista-registros" class="lista-registros"></ul>
+  </section>
+
+  <!-- Tela: Exportar -->
+  <section id="exportar" class="secao">
+    <p class="export-desc">Exporte seus registros como CSV para usar no Google Sheets ou Excel.</p>
+    <div class="export-opcoes">
+      <button id="btn-export-hoje" class="btn-export">Exportar — Hoje</button>
+      <button id="btn-export-semana" class="btn-export">Exportar — Última Semana</button>
+      <button id="btn-export-todos" class="btn-export">Exportar — Todos</button>
+    </div>
+  </section>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
