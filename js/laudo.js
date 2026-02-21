@@ -1,4 +1,4 @@
-/* ── Geração do Laudo (overlay no próprio app) ── */
+/* ── Geracao do Laudo (overlay no proprio app) ── */
 
 function carregarImagemBase64(url) {
   return new Promise(resolve => {
@@ -23,22 +23,21 @@ function fecharLaudo() {
 }
 
 async function gerarLaudo() {
-  const registros = await listarTodosRegistros();
+  const visitas = await listarTodasVisitas();
   const fotos = await listarTodasFotos();
   const logoBase64 = await carregarImagemBase64('./icons/logo-aznunes.jpg');
 
-  if (registros.length === 0) {
+  if (visitas.length === 0) {
     alert('Nenhum registro para gerar o laudo.');
     return;
   }
 
-  // Agrupar registros por dia
+  // Agrupar visitas por dia
   const porDia = {};
-  registros.forEach(r => {
-    const dia = r.dataHora.slice(0, 10);
-    if (!porDia[dia]) porDia[dia] = [];
-    porDia[dia].push(r);
-  });
+  for (const v of visitas) {
+    if (!porDia[v.data]) porDia[v.data] = [];
+    porDia[v.data].push(v);
+  }
 
   const diasOrdenados = Object.keys(porDia).sort();
 
@@ -47,52 +46,74 @@ async function gerarLaudo() {
   let totalGeral = { adulto: 0, jovem: 0, filhote: 0, total: 0 };
   let numCampanha = 0;
 
-  diasOrdenados.forEach(dia => {
+  for (const dia of diasOrdenados) {
     numCampanha++;
-    const regs = porDia[dia];
-    const adultos = regs.filter(r => r.categoria === 'Adulto').reduce((s, r) => s + r.quantidade, 0);
-    const jovens = regs.filter(r => r.categoria === 'Jovem').reduce((s, r) => s + r.quantidade, 0);
-    const filhotes = regs.filter(r => r.categoria === 'Filhote').reduce((s, r) => s + r.quantidade, 0);
-    const total = adultos + jovens + filhotes;
+    const visitasDoDia = porDia[dia];
 
-    totalGeral.adulto += adultos;
-    totalGeral.jovem += jovens;
-    totalGeral.filhote += filhotes;
-    totalGeral.total += total;
+    for (const v of visitasDoDia) {
+      const area = await db.areas.get(v.areaId);
+      const nomeArea = area ? area.nome : 'Area desconhecida';
+      const totais = await totaisDaVisita(v.id);
+      const total = totais.adulto + totais.jovem + totais.filhote;
 
-    const dataFmt = dia.split('-').reverse().join('/');
-    const ultimoComGPS = regs.find(r => r.latitude != null);
-    const lat = ultimoComGPS ? ultimoComGPS.latitude.toFixed(5) : '\u2014';
-    const lng = ultimoComGPS ? ultimoComGPS.longitude.toFixed(5) : '\u2014';
+      if (total === 0) continue;
 
-    linhasResultados += `
-      <tr>
-        <td>${numCampanha}</td>
-        <td>${dataFmt}</td>
-        <td>${adultos}</td>
-        <td>${jovens}</td>
-        <td>${filhotes}</td>
-        <td><strong>${total}</strong></td>
-        <td>${lat}</td>
-        <td>${lng}</td>
-      </tr>`;
-  });
+      totalGeral.adulto += totais.adulto;
+      totalGeral.jovem += totais.jovem;
+      totalGeral.filhote += totais.filhote;
+      totalGeral.total += total;
 
-  // Montar grid de fotos
+      const dataFmt = dia.split('-').reverse().join('/');
+      const lat = v.latitude != null ? v.latitude.toFixed(5) : '\u2014';
+      const lng = v.longitude != null ? v.longitude.toFixed(5) : '\u2014';
+
+      linhasResultados += `
+        <tr>
+          <td>${numCampanha}</td>
+          <td>${dataFmt}</td>
+          <td>${nomeArea}</td>
+          <td>${totais.adulto}</td>
+          <td>${totais.jovem}</td>
+          <td>${totais.filhote}</td>
+          <td><strong>${total}</strong></td>
+          <td>${lat}</td>
+          <td>${lng}</td>
+        </tr>`;
+    }
+  }
+
+  if (totalGeral.total === 0) {
+    alert('Nenhum registro para gerar o laudo.');
+    return;
+  }
+
+  // Montar fotos agrupadas por area
   let fotosHtml = '';
   if (fotos.length > 0) {
-    fotosHtml = `
-      <div class="laudo-secao">
-        <h2>Registro Fotogr\u00e1fico</h2>
-        <div class="laudo-fotos-grid">
-          ${fotos.map(f => `
-            <figure class="laudo-foto">
-              <img src="${f.dataUrl}">
-              ${f.legenda ? `<figcaption>${f.legenda}</figcaption>` : ''}
-            </figure>
-          `).join('')}
-        </div>
-      </div>`;
+    // Agrupar fotos por visitaId → area
+    const fotosPorArea = {};
+    for (const f of fotos) {
+      const area = await obterAreaDaVisita(f.visitaId);
+      const nomeArea = area ? area.nome : 'Sem area';
+      if (!fotosPorArea[nomeArea]) fotosPorArea[nomeArea] = [];
+      fotosPorArea[nomeArea].push(f);
+    }
+
+    fotosHtml = '<div class="laudo-secao"><h2>Registro Fotografico</h2>';
+    for (const [nomeArea, fotosArea] of Object.entries(fotosPorArea)) {
+      fotosHtml += `<p class="laudo-area-fotos-titulo">${nomeArea}</p>`;
+      fotosHtml += '<div class="laudo-fotos-grid">';
+      fotosArea.forEach(f => {
+        fotosHtml += `
+          <figure class="laudo-foto">
+            <img src="${f.dataUrl}">
+            ${f.legenda ? `<figcaption>${f.legenda}</figcaption>` : ''}
+          </figure>
+        `;
+      });
+      fotosHtml += '</div>';
+    }
+    fotosHtml += '</div>';
   }
 
   const dataHoje = new Date().toLocaleDateString('pt-BR');
@@ -129,6 +150,7 @@ async function gerarLaudo() {
               <tr>
                 <th>Dia</th>
                 <th>Data</th>
+                <th>Area</th>
                 <th>Adultos</th>
                 <th>Jovens</th>
                 <th>Filhotes</th>
@@ -140,7 +162,7 @@ async function gerarLaudo() {
             <tbody>
               ${linhasResultados}
               <tr class="laudo-linha-total">
-                <td colspan="2">TOTAL</td>
+                <td colspan="3">TOTAL</td>
                 <td>${totalGeral.adulto}</td>
                 <td>${totalGeral.jovem}</td>
                 <td>${totalGeral.filhote}</td>
@@ -155,7 +177,7 @@ async function gerarLaudo() {
       <!-- Resumo -->
       <div class="laudo-secao">
         <h2>Resumo Populacional</h2>
-        <p>Contabilizando todos os registros de indiv\u00edduos, podemos estimar uma popula\u00e7\u00e3o de <strong>${totalGeral.total} capivaras</strong>, sendo <strong>${totalGeral.adulto} adultos</strong>, <strong>${totalGeral.jovem} jovens</strong> e <strong>${totalGeral.filhote} filhotes</strong>.</p>
+        <p>Contabilizando todos os registros de individuos, podemos estimar uma populacao de <strong>${totalGeral.total} capivaras</strong>, sendo <strong>${totalGeral.adulto} adultos</strong>, <strong>${totalGeral.jovem} jovens</strong> e <strong>${totalGeral.filhote} filhotes</strong>.</p>
         <p>As contagens foram realizadas ao longo de <strong>${diasOrdenados.length} campanha(s)</strong>, entre ${diasOrdenados[0].split('-').reverse().join('/')} e ${diasOrdenados[diasOrdenados.length - 1].split('-').reverse().join('/')}.</p>
       </div>
 
@@ -163,7 +185,7 @@ async function gerarLaudo() {
       ${fotosHtml}
 
       <div class="laudo-rodape">
-        Relat\u00f3rio gerado automaticamente pelo app Contagem de Capivaras \u2014 ${dataHoje}
+        Relatorio gerado automaticamente pelo app Contagem de Capivaras \u2014 ${dataHoje}
       </div>
     </div>
   `;

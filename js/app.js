@@ -2,6 +2,8 @@
 let categoriaSelecionada = null;
 let gpsAtual = { latitude: null, longitude: null, precisao: null };
 let watchId = null;
+let visitaAtiva = null;   // objeto visita completo
+let areaAtiva = null;     // objeto area completo
 
 /* ── Elementos ── */
 const $ = id => document.getElementById(id);
@@ -17,10 +19,9 @@ const gpsBadge         = $('gps-badge');
 const gpsDot           = $('gps-dot');
 const gpsTexto         = $('gps-texto');
 const toastEl          = $('toast');
-const listaRegistros   = $('lista-registros');
 const inputData        = $('input-data');
 
-/* ── Cores por faixa etária ── */
+/* ── Cores por faixa etaria ── */
 const CORES = {
   'Adulto':  'var(--cor-adulto)',
   'Jovem':   'var(--cor-jovem)',
@@ -38,7 +39,7 @@ function toast(msg) {
   setTimeout(() => toastEl.classList.remove('mostrar'), 1500);
 }
 
-/* ── Vibração ── */
+/* ── Vibracao ── */
 function vibrar() {
   if (navigator.vibrate) navigator.vibrate(50);
 }
@@ -46,7 +47,7 @@ function vibrar() {
 /* ── GPS ── */
 function iniciarGPS() {
   if (!('geolocation' in navigator)) {
-    gpsTexto.textContent = 'GPS indisponível';
+    gpsTexto.textContent = 'GPS indisponivel';
     return;
   }
   watchId = navigator.geolocation.watchPosition(
@@ -56,7 +57,7 @@ function iniciarGPS() {
       gpsAtual.precisao = Math.round(pos.coords.accuracy);
       gpsBadge.classList.remove('inativo');
       gpsBadge.classList.add('ativo');
-      gpsTexto.textContent = `GPS ±${gpsAtual.precisao}m`;
+      gpsTexto.textContent = `GPS \u00b1${gpsAtual.precisao}m`;
     },
     () => {
       gpsBadge.classList.remove('ativo');
@@ -65,6 +66,140 @@ function iniciarGPS() {
     },
     { enableHighAccuracy: true, maximumAge: 10000 }
   );
+}
+
+/* ══════════════════════════════════════════
+   ABA AREAS
+   ══════════════════════════════════════════ */
+
+async function renderAreasTab() {
+  await renderVisitasHoje();
+  await renderAreaChips();
+}
+
+async function renderVisitasHoje() {
+  const container = $('visitas-hoje');
+  const semVisitas = $('sem-visitas');
+  const hoje = new Date().toISOString().slice(0, 10);
+  const visitas = await listarVisitasDoDia(hoje);
+
+  if (visitas.length === 0) {
+    container.innerHTML = '';
+    container.appendChild(semVisitas);
+    semVisitas.style.display = '';
+    return;
+  }
+
+  semVisitas.style.display = 'none';
+  container.innerHTML = '';
+
+  for (const v of visitas) {
+    const area = await db.areas.get(v.areaId);
+    if (!area) continue;
+    const totais = await totaisDaVisita(v.id);
+    const total = totais.adulto + totais.jovem + totais.filhote;
+    const hora = v.horaInicio ? new Date(v.horaInicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+    const card = document.createElement('div');
+    card.className = 'visita-card';
+    if (visitaAtiva && visitaAtiva.id === v.id) card.classList.add('ativa');
+
+    card.innerHTML = `
+      <div class="visita-card-header">
+        <span class="visita-card-nome">${area.nome}</span>
+        <span class="visita-card-hora">${hora}</span>
+      </div>
+      <div class="visita-card-totais">
+        <span class="mini-badge adulto">${totais.adulto} Ad</span>
+        <span class="mini-badge jovem">${totais.jovem} Jv</span>
+        <span class="mini-badge filhote">${totais.filhote} Fl</span>
+        <span class="mini-badge total">${total}</span>
+      </div>
+      <button class="btn-continuar" data-visita-id="${v.id}" data-area-id="${v.areaId}">Continuar</button>
+    `;
+    container.appendChild(card);
+  }
+}
+
+async function renderAreaChips() {
+  const container = $('area-chips');
+  const semAreas = $('sem-areas');
+  const areas = await listarAreas();
+
+  if (areas.length === 0) {
+    container.innerHTML = '';
+    container.appendChild(semAreas);
+    semAreas.style.display = '';
+    return;
+  }
+
+  semAreas.style.display = 'none';
+  container.innerHTML = '';
+
+  areas.forEach(a => {
+    const chip = document.createElement('button');
+    chip.className = 'area-chip';
+    chip.dataset.areaId = a.id;
+    chip.innerHTML = `
+      <span class="chip-nome">${a.nome}</span>
+      <span class="chip-del" data-del-area="${a.id}">&times;</span>
+    `;
+    container.appendChild(chip);
+  });
+}
+
+async function selecionarArea(areaId) {
+  const area = await db.areas.get(areaId);
+  if (!area) return;
+
+  areaAtiva = area;
+  visitaAtiva = await obterOuCriarVisitaHoje(areaId, gpsAtual);
+
+  atualizarBannerArea();
+  await atualizarTotal();
+  await renderGaleria();
+  irParaTab('contagem');
+  await renderAreasTab();
+}
+
+async function continuarVisita(visitaId, areaId) {
+  visitaAtiva = await obterVisita(visitaId);
+  areaAtiva = await db.areas.get(areaId);
+
+  atualizarBannerArea();
+  await atualizarTotal();
+  await renderGaleria();
+  irParaTab('contagem');
+}
+
+/* ══════════════════════════════════════════
+   ABA CONTAGEM
+   ══════════════════════════════════════════ */
+
+function atualizarBannerArea() {
+  const banner = $('banner-area');
+  const semArea = $('sem-area-ativa');
+  const conteudo = $('contagem-conteudo');
+
+  if (!visitaAtiva || !areaAtiva) {
+    banner.style.display = 'none';
+    semArea.style.display = '';
+    conteudo.style.display = 'none';
+    return;
+  }
+
+  banner.style.display = '';
+  semArea.style.display = 'none';
+  conteudo.style.display = '';
+
+  $('banner-nome').textContent = areaAtiva.nome;
+  const hora = visitaAtiva.horaInicio
+    ? new Date(visitaAtiva.horaInicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    : '';
+  const gpsInfo = visitaAtiva.latitude
+    ? `${visitaAtiva.latitude.toFixed(4)}, ${visitaAtiva.longitude.toFixed(4)}`
+    : 'Sem GPS';
+  $('banner-detalhe').textContent = `${hora} \u2022 ${gpsInfo}`;
 }
 
 /* ── Segment Control UI ── */
@@ -94,25 +229,22 @@ function selecionarCategoria(nome) {
 }
 
 function atualizarBotoes() {
-  const desabilitado = !categoriaSelecionada;
+  const desabilitado = !categoriaSelecionada || !visitaAtiva;
   btnMaisUm.disabled = desabilitado;
   btnRegistrar.disabled = desabilitado;
-  if (desabilitado) plusLabel.textContent = 'Selecione a faixa';
+  if (!categoriaSelecionada) plusLabel.textContent = 'Selecione a faixa';
 }
 
 /* ── Registrar ── */
 async function registrar(quantidade) {
-  if (!categoriaSelecionada || quantidade < 1) return;
+  if (!categoriaSelecionada || !visitaAtiva || quantidade < 1) return;
 
   const registro = {
+    visitaId: visitaAtiva.id,
     categoria: categoriaSelecionada,
     quantidade,
-    latitude: gpsAtual.latitude,
-    longitude: gpsAtual.longitude,
-    precisaoGPS: gpsAtual.precisao,
     dataHora: new Date().toISOString(),
-    observacao: inputObs.value.trim(),
-    sincronizado: false
+    observacao: inputObs.value.trim()
   };
 
   await adicionarRegistro(registro);
@@ -121,51 +253,29 @@ async function registrar(quantidade) {
   inputQtd.value = '';
   inputObs.value = '';
   await atualizarTotal();
+  await renderAreasTab();
 }
 
 async function atualizarTotal() {
-  const registros = await listarRegistrosDoDia(new Date());
-  const adultos  = registros.filter(r => r.categoria === 'Adulto').reduce((s, r) => s + r.quantidade, 0);
-  const jovens   = registros.filter(r => r.categoria === 'Jovem').reduce((s, r) => s + r.quantidade, 0);
-  const filhotes = registros.filter(r => r.categoria === 'Filhote').reduce((s, r) => s + r.quantidade, 0);
-
-  $('cnt-adulto').textContent = adultos;
-  $('cnt-jovem').textContent = jovens;
-  $('cnt-filhote').textContent = filhotes;
-  totalNumero.textContent = adultos + jovens + filhotes;
-}
-
-/* ── Histórico ── */
-async function renderHistorico() {
-  const data = inputData.value ? new Date(inputData.value + 'T00:00:00') : new Date();
-  const registros = await listarRegistrosDoDia(data);
-  listaRegistros.innerHTML = '';
-
-  if (registros.length === 0) {
-    listaRegistros.innerHTML = '<li class="sem-registros">Nenhum registro neste dia.</li>';
+  if (!visitaAtiva) {
+    $('cnt-adulto').textContent = '0';
+    $('cnt-jovem').textContent = '0';
+    $('cnt-filhote').textContent = '0';
+    totalNumero.textContent = '0';
     return;
   }
 
-  registros.forEach(r => {
-    const li = document.createElement('li');
-    li.className = 'registro-item';
-
-    const hora = new Date(r.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-    li.innerHTML = `
-      <span class="cat-badge" style="background:${corCategoria(r.categoria)}">${r.categoria}</span>
-      <div class="info">
-        <span class="qtd">${r.quantidade}</span>
-        <span class="hora">${hora}</span>
-        ${r.observacao ? `<div class="obs-texto">${r.observacao}</div>` : ''}
-      </div>
-      <button class="btn-deletar" data-id="${r.id}">Remover</button>
-    `;
-    listaRegistros.appendChild(li);
-  });
+  const totais = await totaisDaVisita(visitaAtiva.id);
+  $('cnt-adulto').textContent = totais.adulto;
+  $('cnt-jovem').textContent = totais.jovem;
+  $('cnt-filhote').textContent = totais.filhote;
+  totalNumero.textContent = totais.adulto + totais.jovem + totais.filhote;
 }
 
-/* ── Fotos ── */
+/* ══════════════════════════════════════════
+   FOTOS (embutidas na contagem)
+   ══════════════════════════════════════════ */
+
 function redimensionarImagem(dataUrl, maxLado) {
   return new Promise(resolve => {
     const img = new Image();
@@ -185,11 +295,13 @@ function redimensionarImagem(dataUrl, maxLado) {
 }
 
 async function salvarFoto(file) {
+  if (!visitaAtiva) return;
   const reader = new FileReader();
   reader.onload = async e => {
     const dataUrl = await redimensionarImagem(e.target.result, 1200);
     const legenda = $('input-legenda-foto').value.trim();
     await adicionarFoto({
+      visitaId: visitaAtiva.id,
       dataUrl,
       legenda,
       latitude: gpsAtual.latitude,
@@ -205,10 +317,16 @@ async function salvarFoto(file) {
 }
 
 async function renderGaleria() {
-  const fotos = await listarTodasFotos();
   const galeria = $('galeria-fotos');
   const semFotos = $('sem-fotos');
   galeria.innerHTML = '';
+
+  if (!visitaAtiva) {
+    semFotos.style.display = '';
+    return;
+  }
+
+  const fotos = await listarFotosDaVisita(visitaAtiva.id);
 
   if (fotos.length === 0) {
     semFotos.style.display = '';
@@ -234,25 +352,118 @@ async function renderGaleria() {
   });
 }
 
-/* ── Tabs ── */
+/* ══════════════════════════════════════════
+   ABA HISTORICO
+   ══════════════════════════════════════════ */
+
+async function renderHistorico() {
+  const data = inputData.value ? inputData.value : new Date().toISOString().slice(0, 10);
+  const visitas = await listarVisitasDoDia(data);
+  const container = $('historico-conteudo');
+  container.innerHTML = '';
+
+  if (visitas.length === 0) {
+    container.innerHTML = '<p class="sem-registros">Nenhum registro neste dia.</p>';
+    return;
+  }
+
+  for (const v of visitas) {
+    const area = await db.areas.get(v.areaId);
+    const nomeArea = area ? area.nome : 'Area desconhecida';
+    const registros = await listarRegistrosDaVisita(v.id);
+    const fotos = await listarFotosDaVisita(v.id);
+    const totais = await totaisDaVisita(v.id);
+    const total = totais.adulto + totais.jovem + totais.filhote;
+
+    const bloco = document.createElement('div');
+    bloco.className = 'historico-area-bloco';
+
+    // Header da area
+    let headerHtml = `
+      <div class="historico-area-header">
+        <span class="historico-area-nome">${nomeArea}</span>
+        <span class="historico-area-total">${total} capivaras</span>
+      </div>
+      <div class="historico-area-totais">
+        <span class="mini-badge adulto">${totais.adulto} Ad</span>
+        <span class="mini-badge jovem">${totais.jovem} Jv</span>
+        <span class="mini-badge filhote">${totais.filhote} Fl</span>
+      </div>
+    `;
+
+    // Lista de registros
+    let regsHtml = '';
+    if (registros.length > 0) {
+      regsHtml = '<ul class="lista-registros">';
+      registros.forEach(r => {
+        const hora = new Date(r.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        regsHtml += `
+          <li class="registro-item">
+            <span class="cat-badge" style="background:${corCategoria(r.categoria)}">${r.categoria}</span>
+            <div class="info">
+              <span class="qtd">${r.quantidade}</span>
+              <span class="hora">${hora}</span>
+              ${r.observacao ? `<div class="obs-texto">${r.observacao}</div>` : ''}
+            </div>
+            <button class="btn-deletar" data-id="${r.id}">Remover</button>
+          </li>
+        `;
+      });
+      regsHtml += '</ul>';
+    }
+
+    // Thumbnails de fotos
+    let fotosHtml = '';
+    if (fotos.length > 0) {
+      fotosHtml = '<div class="historico-fotos-strip">';
+      fotos.forEach(f => {
+        fotosHtml += `<img src="${f.dataUrl}" class="historico-thumb" alt="Foto">`;
+      });
+      fotosHtml += '</div>';
+    }
+
+    bloco.innerHTML = headerHtml + regsHtml + fotosHtml;
+    container.appendChild(bloco);
+  }
+}
+
+/* ══════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════ */
+
+function irParaTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('ativo'));
+  document.querySelectorAll('.secao').forEach(s => s.classList.remove('visivel'));
+  const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+  if (btn) btn.classList.add('ativo');
+  document.getElementById(tabId).classList.add('visivel');
+}
+
 function iniciarTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('ativo'));
-      document.querySelectorAll('.secao').forEach(s => s.classList.remove('visivel'));
-      btn.classList.add('ativo');
-      document.getElementById(btn.dataset.tab).classList.add('visivel');
+      irParaTab(btn.dataset.tab);
 
+      if (btn.dataset.tab === 'areas') renderAreasTab();
       if (btn.dataset.tab === 'historico') renderHistorico();
-      if (btn.dataset.tab === 'fotos') renderGaleria();
+      if (btn.dataset.tab === 'contagem') {
+        atualizarBannerArea();
+        atualizarTotal();
+        renderGaleria();
+      }
     });
   });
 }
 
-/* ── Eventos ── */
+/* ══════════════════════════════════════════
+   EVENTOS
+   ══════════════════════════════════════════ */
+
 function iniciarEventos() {
+  // +1
   btnMaisUm.addEventListener('click', () => registrar(1));
 
+  // Registrar quantidade
   btnRegistrar.addEventListener('click', () => {
     const qtd = parseInt(inputQtd.value, 10);
     if (qtd > 0) registrar(qtd);
@@ -265,9 +476,11 @@ function iniciarEventos() {
     }
   });
 
+  // Filtro historico
   $('btn-filtrar-data').addEventListener('click', renderHistorico);
 
-  listaRegistros.addEventListener('click', async e => {
+  // Deletar registro no historico
+  $('historico-conteudo').addEventListener('click', async e => {
     const btn = e.target.closest('.btn-deletar');
     if (!btn) return;
     const id = Number(btn.dataset.id);
@@ -275,8 +488,71 @@ function iniciarEventos() {
       await deletarRegistro(id);
       await renderHistorico();
       await atualizarTotal();
+      await renderAreasTab();
       toast('Registro deletado');
     }
+  });
+
+  // Criar area
+  $('btn-criar-area').addEventListener('click', async () => {
+    const nome = $('input-nova-area').value.trim();
+    if (!nome) return;
+    await criarArea(nome);
+    $('input-nova-area').value = '';
+    toast('Area criada');
+    await renderAreasTab();
+  });
+
+  $('input-nova-area').addEventListener('keydown', async e => {
+    if (e.key === 'Enter') {
+      const nome = $('input-nova-area').value.trim();
+      if (!nome) return;
+      await criarArea(nome);
+      $('input-nova-area').value = '';
+      toast('Area criada');
+      await renderAreasTab();
+    }
+  });
+
+  // Click em area chip → selecionar area
+  $('area-chips').addEventListener('click', async e => {
+    // Deletar area
+    const delBtn = e.target.closest('.chip-del');
+    if (delBtn) {
+      e.stopPropagation();
+      const areaId = Number(delBtn.dataset.delArea);
+      if (confirm('Remover esta area e todas suas visitas?')) {
+        await deletarArea(areaId);
+        if (areaAtiva && areaAtiva.id === areaId) {
+          areaAtiva = null;
+          visitaAtiva = null;
+          atualizarBannerArea();
+        }
+        toast('Area removida');
+        await renderAreasTab();
+      }
+      return;
+    }
+    // Selecionar area
+    const chip = e.target.closest('.area-chip');
+    if (chip) {
+      const areaId = Number(chip.dataset.areaId);
+      await selecionarArea(areaId);
+    }
+  });
+
+  // Click em visita card → continuar
+  $('visitas-hoje').addEventListener('click', async e => {
+    const btn = e.target.closest('.btn-continuar');
+    if (!btn) return;
+    const visitaId = Number(btn.dataset.visitaId);
+    const areaId = Number(btn.dataset.areaId);
+    await continuarVisita(visitaId, areaId);
+  });
+
+  // Trocar area
+  $('btn-trocar-area').addEventListener('click', () => {
+    irParaTab('areas');
   });
 
   // Fotos
@@ -296,7 +572,7 @@ function iniciarEventos() {
     }
   });
 
-  // Exportação
+  // Exportacao
   $('btn-export-hoje').addEventListener('click', () => exportarCSV('hoje'));
   $('btn-export-semana').addEventListener('click', () => exportarCSV('semana'));
   $('btn-export-todos').addEventListener('click', () => exportarCSV('todos'));
@@ -316,8 +592,9 @@ async function init() {
   iniciarGPS();
   iniciarTabs();
   renderCategorias();
-  await atualizarTotal();
   iniciarEventos();
+  await renderAreasTab();
+  atualizarBannerArea();
 
   inputData.value = new Date().toISOString().slice(0, 10);
 }

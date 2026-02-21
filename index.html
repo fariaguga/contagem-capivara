@@ -27,78 +27,115 @@
 
   <!-- Tabs -->
   <nav class="tabs">
-    <button class="tab-btn ativo" data-tab="contagem">Contagem</button>
-    <button class="tab-btn" data-tab="fotos">Fotos</button>
-    <button class="tab-btn" data-tab="historico">Histórico</button>
+    <button class="tab-btn ativo" data-tab="areas">Areas</button>
+    <button class="tab-btn" data-tab="contagem">Contagem</button>
+    <button class="tab-btn" data-tab="historico">Historico</button>
     <button class="tab-btn" data-tab="exportar">Exportar</button>
   </nav>
 
+  <!-- Tela: Areas -->
+  <section id="areas" class="secao visivel">
+    <!-- Visitas de hoje -->
+    <h2 class="secao-titulo">Visitas de hoje</h2>
+    <div id="visitas-hoje" class="visitas-hoje">
+      <p id="sem-visitas" class="sem-registros">Nenhuma visita hoje. Selecione uma area abaixo.</p>
+    </div>
+
+    <!-- Criar nova area -->
+    <div class="nova-area-row">
+      <input type="text" id="input-nova-area" placeholder="Nova area..." class="input-nova-area">
+      <button id="btn-criar-area" class="btn-criar-area">Criar</button>
+    </div>
+
+    <!-- Chips de areas salvas -->
+    <h2 class="secao-titulo">Areas salvas</h2>
+    <div id="area-chips" class="area-chips">
+      <p id="sem-areas" class="sem-registros">Nenhuma area cadastrada.</p>
+    </div>
+  </section>
+
   <!-- Tela: Contagem -->
-  <section id="contagem" class="secao visivel">
+  <section id="contagem" class="secao">
 
-    <!-- Segment Control -->
-    <div class="segment-control" id="categorias-grid"></div>
-
-    <!-- Botão +1 -->
-    <button id="btn-mais-um" class="btn-mais-um" disabled>
-      <span class="plus-icon">+1</span>
-      <span class="plus-label" id="plus-label">Selecione a faixa</span>
-    </button>
-
-    <!-- Quantidade -->
-    <div class="registro-row">
-      <div class="input-group">
-        <label for="input-qtd">Quantidade</label>
-        <input id="input-qtd" type="number" min="1" placeholder="0" inputmode="numeric">
+    <!-- Banner da area ativa -->
+    <div id="banner-area" class="banner-area" style="display:none">
+      <div class="banner-info">
+        <div class="banner-nome" id="banner-nome">-</div>
+        <div class="banner-detalhe" id="banner-detalhe">-</div>
       </div>
-      <button id="btn-registrar" class="btn-registrar" disabled>Registrar</button>
+      <button id="btn-trocar-area" class="btn-trocar">Trocar</button>
     </div>
 
-    <!-- Observação -->
-    <div class="obs-group">
-      <label for="input-obs">Observação</label>
-      <textarea id="input-obs" rows="2" placeholder="Opcional"></textarea>
+    <div id="sem-area-ativa" class="sem-area-ativa">
+      <p>Selecione uma area na aba <strong>Areas</strong> para iniciar a contagem.</p>
     </div>
 
-    <!-- Contadores por categoria -->
-    <div class="contadores-row">
-      <div class="contador-mini adulto">
-        <div class="cm-label">Adulto</div>
-        <div class="cm-num" id="cnt-adulto">0</div>
-      </div>
-      <div class="contador-mini jovem">
-        <div class="cm-label">Jovem</div>
-        <div class="cm-num" id="cnt-jovem">0</div>
-      </div>
-      <div class="contador-mini filhote">
-        <div class="cm-label">Filhote</div>
-        <div class="cm-num" id="cnt-filhote">0</div>
-      </div>
-    </div>
+    <div id="contagem-conteudo" style="display:none">
+      <!-- Segment Control -->
+      <div class="segment-control" id="categorias-grid"></div>
 
-    <!-- Total -->
-    <div class="total-card">
-      <div class="total-label">Total hoje</div>
-      <div class="total-numero" id="total-numero">0</div>
+      <!-- Botao +1 -->
+      <button id="btn-mais-um" class="btn-mais-um" disabled>
+        <span class="plus-icon">+1</span>
+        <span class="plus-label" id="plus-label">Selecione a faixa</span>
+      </button>
+
+      <!-- Quantidade -->
+      <div class="registro-row">
+        <div class="input-group">
+          <label for="input-qtd">Quantidade</label>
+          <input id="input-qtd" type="number" min="1" placeholder="0" inputmode="numeric">
+        </div>
+        <button id="btn-registrar" class="btn-registrar" disabled>Registrar</button>
+      </div>
+
+      <!-- Observacao -->
+      <div class="obs-group">
+        <label for="input-obs">Observacao</label>
+        <textarea id="input-obs" rows="2" placeholder="Opcional"></textarea>
+      </div>
+
+      <!-- Contadores por categoria -->
+      <div class="contadores-row">
+        <div class="contador-mini adulto">
+          <div class="cm-label">Adulto</div>
+          <div class="cm-num" id="cnt-adulto">0</div>
+        </div>
+        <div class="contador-mini jovem">
+          <div class="cm-label">Jovem</div>
+          <div class="cm-num" id="cnt-jovem">0</div>
+        </div>
+        <div class="contador-mini filhote">
+          <div class="cm-label">Filhote</div>
+          <div class="cm-num" id="cnt-filhote">0</div>
+        </div>
+      </div>
+
+      <!-- Total da area -->
+      <div class="total-card">
+        <div class="total-label">Total desta area</div>
+        <div class="total-numero" id="total-numero">0</div>
+      </div>
+
+      <!-- Fotos embutidas -->
+      <div class="fotos-area-secao">
+        <h3 class="fotos-area-titulo">Fotos desta area</h3>
+        <label class="btn-foto-captura" for="input-foto">
+          <span>Tirar Foto / Escolher Imagem</span>
+        </label>
+        <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none">
+        <div class="obs-group-foto">
+          <label for="input-legenda-foto">Legenda</label>
+          <textarea id="input-legenda-foto" rows="2" placeholder="Opcional"></textarea>
+        </div>
+        <div id="galeria-fotos" class="galeria-fotos"></div>
+        <p id="sem-fotos" class="sem-registros">Nenhuma foto nesta area.</p>
+      </div>
     </div>
 
   </section>
 
-  <!-- Tela: Fotos -->
-  <section id="fotos" class="secao">
-    <label class="btn-foto-captura" for="input-foto">
-      <span>📷</span> Tirar Foto / Escolher Imagem
-    </label>
-    <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none">
-    <div class="obs-group-foto">
-      <label for="input-legenda-foto">Legenda</label>
-      <textarea id="input-legenda-foto" rows="2" placeholder="Opcional"></textarea>
-    </div>
-    <div id="galeria-fotos" class="galeria-fotos"></div>
-    <p id="sem-fotos" class="sem-registros">Nenhuma foto registrada.</p>
-  </section>
-
-  <!-- Tela: Histórico -->
+  <!-- Tela: Historico -->
   <section id="historico" class="secao">
     <div class="filtro-data">
       <div class="input-group">
@@ -107,7 +144,7 @@
       </div>
       <button id="btn-filtrar-data">Filtrar</button>
     </div>
-    <ul id="lista-registros" class="lista-registros"></ul>
+    <div id="historico-conteudo"></div>
   </section>
 
   <!-- Tela: Exportar -->
@@ -115,31 +152,31 @@
     <p class="export-desc">Exporte registros ou gere o laudo completo.</p>
     <div class="export-opcoes">
       <button id="btn-export-hoje" class="btn-export">
-        <span class="export-icon csv">📄</span>
+        <span class="export-icon csv">CSV</span>
         <div class="export-texts">
           <div class="export-title">Hoje</div>
           <div class="export-sub">Exportar CSV do dia</div>
         </div>
       </button>
       <button id="btn-export-semana" class="btn-export">
-        <span class="export-icon csv">📄</span>
+        <span class="export-icon csv">CSV</span>
         <div class="export-texts">
-          <div class="export-title">Última Semana</div>
-          <div class="export-sub">Exportar CSV dos últimos 7 dias</div>
+          <div class="export-title">Ultima Semana</div>
+          <div class="export-sub">Exportar CSV dos ultimos 7 dias</div>
         </div>
       </button>
       <button id="btn-export-todos" class="btn-export">
-        <span class="export-icon csv">📄</span>
+        <span class="export-icon csv">CSV</span>
         <div class="export-texts">
           <div class="export-title">Todos os Registros</div>
           <div class="export-sub">Exportar CSV completo</div>
         </div>
       </button>
       <button id="btn-gerar-laudo" class="btn-export">
-        <span class="export-icon pdf">📋</span>
+        <span class="export-icon pdf">PDF</span>
         <div class="export-texts">
           <div class="export-title">Gerar Laudo</div>
-          <div class="export-sub">Relatório completo com fotos (PDF)</div>
+          <div class="export-sub">Relatorio completo com fotos (PDF)</div>
         </div>
       </button>
     </div>

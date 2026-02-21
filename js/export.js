@@ -1,20 +1,34 @@
-/* ── Exportação CSV ── */
+/* ── Exportacao CSV ── */
 
-function registrosParaCSV(registros) {
-  const cabecalho = 'id,faixaEtaria,quantidade,latitude,longitude,precisaoGPS,dataHora,observacao';
-  const linhas = registros.map(r => {
+async function registrosParaCSV(registros) {
+  const cabecalho = 'id,area,faixaEtaria,quantidade,latitude,longitude,precisaoGPS,dataHora,observacao';
+  const linhas = [];
+
+  for (const r of registros) {
+    let nomeArea = '';
+    let visita = null;
+    if (r.visitaId) {
+      visita = await obterVisita(r.visitaId);
+      if (visita) {
+        const area = await db.areas.get(visita.areaId);
+        nomeArea = area ? area.nome : '';
+      }
+    }
+
     const obs = (r.observacao || '').replace(/"/g, '""');
-    return [
+    linhas.push([
       r.id,
+      `"${nomeArea}"`,
       r.categoria,
       r.quantidade,
-      r.latitude ?? '',
-      r.longitude ?? '',
-      r.precisaoGPS ?? '',
+      visita?.latitude ?? '',
+      visita?.longitude ?? '',
+      visita?.precisaoGPS ?? '',
       r.dataHora,
       `"${obs}"`
-    ].join(',');
-  });
+    ].join(','));
+  }
+
   return cabecalho + '\n' + linhas.join('\n');
 }
 
@@ -40,8 +54,16 @@ async function exportarCSV(filtro) {
   } else if (filtro === 'semana') {
     const seteDiasAtras = new Date(agora);
     seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
-    seteDiasAtras.setHours(0, 0, 0, 0);
-    registros = await listarRegistrosPeriodo(seteDiasAtras.toISOString(), agora.toISOString());
+    const dataInicio = seteDiasAtras.toISOString().slice(0, 10);
+    const dataFim = agora.toISOString().slice(0, 10);
+
+    // Buscar todas visitas nos ultimos 7 dias
+    const todasVisitas = await listarTodasVisitas();
+    const visitasNoPeriodo = todasVisitas.filter(v => v.data >= dataInicio && v.data <= dataFim);
+    const ids = visitasNoPeriodo.map(v => v.id);
+    registros = ids.length > 0
+      ? await db.registros.where('visitaId').anyOf(ids).toArray()
+      : [];
   } else {
     registros = await listarTodosRegistros();
   }
@@ -51,7 +73,7 @@ async function exportarCSV(filtro) {
     return;
   }
 
-  const csv = registrosParaCSV(registros);
+  const csv = await registrosParaCSV(registros);
   const dataStr = agora.toISOString().slice(0, 10);
   baixarCSV(csv, `contagem-capivaras-${filtro}-${dataStr}.csv`);
 }

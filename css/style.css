@@ -110,9 +110,213 @@ header h1 {
   border-bottom-color: var(--verde);
 }
 
-/* ── Seções ── */
+/* ── Secoes ── */
 .secao { display: none; padding: 20px; }
 .secao.visivel { display: block; }
+
+.secao-titulo {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--texto-sec);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+}
+
+/* ══════════════════════════════════════════
+   ABA AREAS
+   ══════════════════════════════════════════ */
+
+/* ── Visita cards ── */
+.visitas-hoje {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.visita-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--sombra);
+  border-left: 4px solid var(--verde);
+  transition: var(--trans);
+}
+.visita-card.ativa {
+  border-left-color: var(--cor-jovem);
+  box-shadow: var(--sombra-md);
+}
+.visita-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.visita-card-nome {
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--texto);
+}
+.visita-card-hora {
+  font-size: .72rem;
+  color: var(--texto-sec);
+}
+.visita-card-totais {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+/* Mini badges (usados em visita cards e historico) */
+.mini-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: .7rem;
+  font-weight: 600;
+}
+.mini-badge.adulto  { background: #E8F5E9; color: var(--cor-adulto); }
+.mini-badge.jovem   { background: #FEF3C7; color: #92400E; }
+.mini-badge.filhote { background: #DBEAFE; color: #1E40AF; }
+.mini-badge.total   { background: var(--verde); color: #fff; }
+
+.btn-continuar {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--verde);
+  color: #fff;
+  font-family: inherit;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--trans);
+}
+.btn-continuar:active { transform: scale(.97); }
+
+/* ── Nova area ── */
+.nova-area-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.input-nova-area {
+  flex: 1;
+  padding: 12px;
+  font-family: inherit;
+  font-size: .88rem;
+  border: 1.5px solid var(--borda);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--texto);
+  transition: border-color var(--trans);
+}
+.input-nova-area:focus {
+  outline: none;
+  border-color: var(--verde);
+}
+.btn-criar-area {
+  padding: 12px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--verde);
+  color: #fff;
+  font-family: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--trans);
+}
+.btn-criar-area:active { transform: scale(.96); }
+
+/* ── Area chips ── */
+.area-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.area-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--borda);
+  border-radius: 30px;
+  background: var(--card);
+  font-family: inherit;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--texto);
+  cursor: pointer;
+  transition: var(--trans);
+  box-shadow: var(--sombra);
+}
+.area-chip:active {
+  transform: scale(.96);
+  border-color: var(--verde);
+}
+.chip-nome { pointer-events: none; }
+.chip-del {
+  font-size: 1rem;
+  color: var(--texto-sec);
+  line-height: 1;
+  padding: 0 2px;
+  transition: color var(--trans);
+}
+.chip-del:hover { color: var(--cor-perigo); }
+
+/* ══════════════════════════════════════════
+   ABA CONTAGEM
+   ══════════════════════════════════════════ */
+
+/* ── Banner da area ativa ── */
+.banner-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #E8F5E9 0%, #FFFFFF 100%);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--sombra);
+  border-left: 4px solid var(--verde);
+}
+.banner-info { flex: 1; }
+.banner-nome {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--verde-escuro);
+}
+.banner-detalhe {
+  font-size: .72rem;
+  color: var(--texto-sec);
+  margin-top: 2px;
+}
+.btn-trocar {
+  padding: 8px 14px;
+  border: 1.5px solid var(--borda);
+  border-radius: 8px;
+  background: var(--card);
+  font-family: inherit;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--texto);
+  cursor: pointer;
+  transition: var(--trans);
+}
+.btn-trocar:active { transform: scale(.95); }
+
+/* ── Sem area ativa ── */
+.sem-area-ativa {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--texto-sec);
+  font-size: .88rem;
+}
 
 /* ── Segment Control (Adulto/Jovem/Filhote) ── */
 .segment-control {
@@ -147,7 +351,7 @@ header h1 {
 .seg-btn[data-cat="Jovem"].selecionado   { color: var(--cor-jovem); }
 .seg-btn[data-cat="Filhote"].selecionado { color: var(--cor-filhote); }
 
-/* ── Botão +1 ── */
+/* ── Botao +1 ── */
 .btn-mais-um {
   width: 100%;
   padding: 24px 20px;
@@ -237,7 +441,7 @@ header h1 {
 .btn-registrar:active { transform: scale(.96); }
 .btn-registrar:disabled { opacity: .4; cursor: not-allowed; }
 
-/* ── Observação ── */
+/* ── Observacao ── */
 .obs-group { margin-bottom: 20px; }
 .obs-group label {
   display: block;
@@ -305,6 +509,7 @@ header h1 {
   padding: 20px;
   text-align: center;
   box-shadow: var(--sombra);
+  margin-bottom: 24px;
 }
 .total-card .total-label {
   font-size: .72rem;
@@ -319,6 +524,19 @@ header h1 {
   font-weight: 800;
   color: var(--verde);
   line-height: 1.1;
+}
+
+/* ── Fotos embutidas na contagem ── */
+.fotos-area-secao {
+  margin-top: 8px;
+}
+.fotos-area-titulo {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--texto-sec);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
 }
 
 /* ── Feedback toast ── */
@@ -344,7 +562,10 @@ header h1 {
   transform: translateX(-50%) translateY(0);
 }
 
-/* ── Histórico ── */
+/* ══════════════════════════════════════════
+   ABA HISTORICO
+   ══════════════════════════════════════════ */
+
 .filtro-data {
   display: flex;
   gap: 8px;
@@ -374,16 +595,47 @@ header h1 {
   cursor: pointer;
 }
 
-.lista-registros { list-style: none; }
-.registro-item {
+/* ── Bloco por area ── */
+.historico-area-bloco {
   background: var(--card);
   border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-bottom: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
   box-shadow: var(--sombra);
+  border-left: 4px solid var(--verde);
+}
+.historico-area-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.historico-area-nome {
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--texto);
+}
+.historico-area-total {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--verde);
+}
+.historico-area-totais {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.lista-registros { list-style: none; }
+.registro-item {
+  background: var(--fundo);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   transition: transform .15s ease-out;
 }
 .registro-item .cat-badge {
@@ -423,6 +675,23 @@ header h1 {
 }
 .btn-deletar:active { transform: scale(.93); }
 
+/* ── Fotos strip no historico ── */
+.historico-fotos-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.historico-thumb {
+  width: 72px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--borda);
+  flex-shrink: 0;
+}
+
 .sem-registros {
   text-align: center;
   color: var(--texto-sec);
@@ -430,7 +699,10 @@ header h1 {
   font-size: .88rem;
 }
 
-/* ── Exportação ── */
+/* ══════════════════════════════════════════
+   ABA EXPORTAR
+   ══════════════════════════════════════════ */
+
 .export-opcoes {
   display: flex;
   flex-direction: column;
@@ -461,11 +733,12 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: .75rem;
+  font-weight: 700;
   flex-shrink: 0;
 }
-.btn-export .export-icon.csv { background: #DCFCE7; }
-.btn-export .export-icon.pdf { background: #DBEAFE; }
+.btn-export .export-icon.csv { background: #DCFCE7; color: var(--cor-adulto); }
+.btn-export .export-icon.pdf { background: #DBEAFE; color: #1E40AF; }
 .btn-export .export-texts { flex: 1; }
 .btn-export .export-title { font-weight: 600; }
 .btn-export .export-sub {
@@ -480,7 +753,10 @@ header h1 {
   margin-bottom: 16px;
 }
 
-/* ── Fotos ── */
+/* ══════════════════════════════════════════
+   FOTOS (compartilhado contagem + galeria)
+   ══════════════════════════════════════════ */
+
 .btn-foto-captura {
   display: flex;
   align-items: center;
@@ -571,7 +847,10 @@ header h1 {
 }
 .foto-card .btn-deletar-foto:active { background: #FEF2F2; }
 
-/* ── Laudo Overlay ── */
+/* ══════════════════════════════════════════
+   LAUDO OVERLAY
+   ══════════════════════════════════════════ */
+
 #laudo-overlay {
   position: fixed;
   inset: 0;
@@ -647,7 +926,7 @@ header h1 {
   color: var(--texto-sec);
 }
 
-/* Seções */
+/* Secoes */
 .laudo-secao {
   margin-bottom: 24px;
 }
@@ -677,7 +956,7 @@ header h1 {
   width: 100%;
   border-collapse: collapse;
   font-size: .75rem;
-  min-width: 500px;
+  min-width: 560px;
 }
 .laudo-tabela th {
   background: var(--verde);
@@ -716,7 +995,15 @@ header h1 {
   margin-top: 4px;
 }
 
-/* Rodapé */
+/* Fotos por area no laudo */
+.laudo-area-fotos-titulo {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--texto);
+  margin: 12px 0 8px;
+}
+
+/* Rodape */
 .laudo-rodape {
   margin-top: 30px;
   text-align: center;
@@ -726,7 +1013,7 @@ header h1 {
   padding-top: 12px;
 }
 
-/* Impressão */
+/* Impressao */
 @media print {
   body > *:not(#laudo-overlay) { display: none !important; }
   #laudo-overlay { position: static; }
