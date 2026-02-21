@@ -79,18 +79,14 @@ async function renderAreasTab() {
 
 async function renderVisitasHoje() {
   const container = $('visitas-hoje');
-  const semVisitas = $('sem-visitas');
   const hoje = new Date().toISOString().slice(0, 10);
   const visitas = await listarVisitasDoDia(hoje);
 
   if (visitas.length === 0) {
-    container.innerHTML = '';
-    container.appendChild(semVisitas);
-    semVisitas.style.display = '';
+    container.innerHTML = '<p class="sem-registros">Nenhuma visita hoje. Selecione uma area abaixo.</p>';
     return;
   }
 
-  semVisitas.style.display = 'none';
   container.innerHTML = '';
 
   for (const v of visitas) {
@@ -123,17 +119,13 @@ async function renderVisitasHoje() {
 
 async function renderAreaChips() {
   const container = $('area-chips');
-  const semAreas = $('sem-areas');
   const areas = await listarAreas();
 
   if (areas.length === 0) {
-    container.innerHTML = '';
-    container.appendChild(semAreas);
-    semAreas.style.display = '';
+    container.innerHTML = '<p class="sem-registros">Nenhuma area cadastrada.</p>';
     return;
   }
 
-  semAreas.style.display = 'none';
   container.innerHTML = '';
 
   areas.forEach(a => {
