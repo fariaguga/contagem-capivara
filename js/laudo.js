@@ -1,7 +1,7 @@
-/* ── Geração do Laudo (HTML para impressão/PDF) ── */
+/* ── Geração do Laudo (overlay no próprio app) ── */
 
 function carregarImagemBase64(url) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
@@ -16,22 +16,18 @@ function carregarImagemBase64(url) {
   });
 }
 
-async function gerarLaudo() {
-  // Abrir janela IMEDIATAMENTE (antes de qualquer await)
-  // para não ser bloqueado como popup no mobile Safari
-  const janela = window.open('', '_blank');
-  if (!janela) {
-    alert('Permita popups para gerar o laudo.');
-    return;
-  }
-  janela.document.write('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#555"><p>Gerando laudo...</p></body></html>');
+function fecharLaudo() {
+  const overlay = document.getElementById('laudo-overlay');
+  if (overlay) overlay.remove();
+  document.body.style.overflow = '';
+}
 
+async function gerarLaudo() {
   const registros = await listarTodosRegistros();
   const fotos = await listarTodasFotos();
   const logoBase64 = await carregarImagemBase64('./icons/logo-aznunes.jpg');
 
   if (registros.length === 0) {
-    janela.close();
     alert('Nenhum registro para gerar o laudo.');
     return;
   }
@@ -66,8 +62,8 @@ async function gerarLaudo() {
 
     const dataFmt = dia.split('-').reverse().join('/');
     const ultimoComGPS = regs.find(r => r.latitude != null);
-    const lat = ultimoComGPS ? ultimoComGPS.latitude.toFixed(5) : '—';
-    const lng = ultimoComGPS ? ultimoComGPS.longitude.toFixed(5) : '—';
+    const lat = ultimoComGPS ? ultimoComGPS.latitude.toFixed(5) : '\u2014';
+    const lng = ultimoComGPS ? ultimoComGPS.longitude.toFixed(5) : '\u2014';
 
     linhasResultados += `
       <tr>
@@ -86,11 +82,11 @@ async function gerarLaudo() {
   let fotosHtml = '';
   if (fotos.length > 0) {
     fotosHtml = `
-      <div class="secao-laudo">
-        <h2>Registro Fotográfico</h2>
-        <div class="fotos-grid">
+      <div class="laudo-secao">
+        <h2>Registro Fotogr\u00e1fico</h2>
+        <div class="laudo-fotos-grid">
           ${fotos.map(f => `
-            <figure class="foto-laudo">
+            <figure class="laudo-foto">
               <img src="${f.dataUrl}">
               ${f.legenda ? `<figcaption>${f.legenda}</figcaption>` : ''}
             </figure>
@@ -101,209 +97,77 @@ async function gerarLaudo() {
 
   const dataHoje = new Date().toLocaleDateString('pt-BR');
 
-  const html = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Laudo — Levantamento Populacional de Capivaras</title>
-  <style>
-    @page { margin: 20mm 15mm; size: A4; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-      color: #212121;
-      font-size: 11pt;
-      line-height: 1.5;
-    }
+  // Remover overlay anterior se existir
+  const anterior = document.getElementById('laudo-overlay');
+  if (anterior) anterior.remove();
 
-    /* ── Capa ── */
-    .capa {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 90vh;
-      text-align: center;
-      page-break-after: always;
-    }
-    .capa h1 {
-      font-size: 22pt;
-      color: #2e7d32;
-      margin-bottom: .3em;
-    }
-    .capa h2 {
-      font-size: 14pt;
-      font-weight: 400;
-      font-style: italic;
-      color: #555;
-      margin-bottom: 2em;
-    }
-    .capa .local {
-      font-size: 13pt;
-      color: #333;
-    }
-    .capa .data-laudo {
-      margin-top: 3em;
-      font-size: 11pt;
-      color: #757575;
-    }
-    .capa .logo-capivara {
-      margin-bottom: 2em;
-    }
-    .capa .logo-capivara img {
-      max-width: 320px;
-      height: auto;
-    }
+  // Criar overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'laudo-overlay';
+  overlay.innerHTML = `
+    <div class="laudo-toolbar">
+      <button class="laudo-btn-voltar" onclick="fecharLaudo()">Voltar</button>
+      <span class="laudo-toolbar-titulo">Laudo</span>
+      <button class="laudo-btn-print" onclick="window.print()">Salvar PDF</button>
+    </div>
+    <div class="laudo-conteudo">
 
-    /* ── Seções ── */
-    .secao-laudo {
-      margin-bottom: 2em;
-    }
-    .secao-laudo h2 {
-      font-size: 14pt;
-      color: #2e7d32;
-      border-bottom: 2px solid #2e7d32;
-      padding-bottom: .3em;
-      margin-bottom: .8em;
-    }
-    .secao-laudo p {
-      margin-bottom: .6em;
-      text-align: justify;
-    }
+      <!-- Capa -->
+      <div class="laudo-capa">
+        ${logoBase64 ? `<img class="laudo-logo" src="${logoBase64}" alt="AZ Nunes">` : ''}
+        <h1>LEVANTAMENTO POPULACIONAL DE CAPIVARAS</h1>
+        <p class="laudo-subtitulo">(<em>Hydrochoerus hydrochaeris</em>)</p>
+        <p class="laudo-data">${dataHoje}</p>
+      </div>
 
-    /* ── Tabela ── */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 1em;
-      font-size: 10pt;
-    }
-    th {
-      background: #2e7d32;
-      color: #fff;
-      padding: .5em .4em;
-      text-align: center;
-      font-weight: 600;
-    }
-    td {
-      border: 1px solid #ccc;
-      padding: .4em;
-      text-align: center;
-    }
-    tr:nth-child(even) td { background: #f5f5f5; }
-    .linha-total td {
-      background: #e8f5e9 !important;
-      font-weight: 700;
-    }
+      <!-- Resultados -->
+      <div class="laudo-secao">
+        <h2>Resultado de Capivaras Avistadas</h2>
+        <div class="laudo-tabela-wrapper">
+          <table class="laudo-tabela">
+            <thead>
+              <tr>
+                <th>Dia</th>
+                <th>Data</th>
+                <th>Adultos</th>
+                <th>Jovens</th>
+                <th>Filhotes</th>
+                <th>Total</th>
+                <th>Lat</th>
+                <th>Lng</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${linhasResultados}
+              <tr class="laudo-linha-total">
+                <td colspan="2">TOTAL</td>
+                <td>${totalGeral.adulto}</td>
+                <td>${totalGeral.jovem}</td>
+                <td>${totalGeral.filhote}</td>
+                <td>${totalGeral.total}</td>
+                <td colspan="2">\u2014</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-    /* ── Fotos ── */
-    .fotos-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .foto-laudo img {
-      width: 100%;
-      border-radius: 6px;
-      border: 1px solid #ddd;
-    }
-    .foto-laudo figcaption {
-      font-size: 9pt;
-      color: #555;
-      text-align: center;
-      margin-top: .3em;
-    }
+      <!-- Resumo -->
+      <div class="laudo-secao">
+        <h2>Resumo Populacional</h2>
+        <p>Contabilizando todos os registros de indiv\u00edduos, podemos estimar uma popula\u00e7\u00e3o de <strong>${totalGeral.total} capivaras</strong>, sendo <strong>${totalGeral.adulto} adultos</strong>, <strong>${totalGeral.jovem} jovens</strong> e <strong>${totalGeral.filhote} filhotes</strong>.</p>
+        <p>As contagens foram realizadas ao longo de <strong>${diasOrdenados.length} campanha(s)</strong>, entre ${diasOrdenados[0].split('-').reverse().join('/')} e ${diasOrdenados[diasOrdenados.length - 1].split('-').reverse().join('/')}.</p>
+      </div>
 
-    /* ── Rodapé ── */
-    .rodape {
-      margin-top: 3em;
-      text-align: center;
-      font-size: 9pt;
-      color: #999;
-      border-top: 1px solid #ddd;
-      padding-top: 1em;
-    }
+      <!-- Fotos -->
+      ${fotosHtml}
 
-    @media print {
-      .btn-imprimir { display: none; }
-    }
-    .btn-imprimir {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 12px 24px;
-      background: #2e7d32;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 14pt;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,.3);
-      z-index: 100;
-    }
-  </style>
-</head>
-<body>
+      <div class="laudo-rodape">
+        Relat\u00f3rio gerado automaticamente pelo app Contagem de Capivaras \u2014 ${dataHoje}
+      </div>
+    </div>
+  `;
 
-  <button class="btn-imprimir" onclick="window.print()">Salvar como PDF</button>
-
-  <!-- Capa -->
-  <div class="capa">
-    <div class="logo-capivara">${logoBase64 ? `<img src="${logoBase64}" alt="AZ Nunes">` : ''}</div>
-    <h1>LEVANTAMENTO POPULACIONAL DE CAPIVARAS</h1>
-    <h2>(<em>Hydrochoerus hydrochaeris</em>)</h2>
-    <p class="data-laudo">${dataHoje}</p>
-  </div>
-
-  <!-- Resultados -->
-  <div class="secao-laudo">
-    <h2>Resultado de Capivaras Avistadas</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Dia</th>
-          <th>Data</th>
-          <th>Adultos</th>
-          <th>Jovens</th>
-          <th>Filhotes</th>
-          <th>Total</th>
-          <th>Latitude</th>
-          <th>Longitude</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${linhasResultados}
-        <tr class="linha-total">
-          <td colspan="2">TOTAL</td>
-          <td>${totalGeral.adulto}</td>
-          <td>${totalGeral.jovem}</td>
-          <td>${totalGeral.filhote}</td>
-          <td>${totalGeral.total}</td>
-          <td colspan="2">—</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Resumo -->
-  <div class="secao-laudo">
-    <h2>Resumo Populacional</h2>
-    <p>Contabilizando todos os registros de indivíduos, podemos estimar uma população de <strong>${totalGeral.total} capivaras</strong>, sendo <strong>${totalGeral.adulto} adultos</strong>, <strong>${totalGeral.jovem} jovens</strong> e <strong>${totalGeral.filhote} filhotes</strong>.</p>
-    <p>As contagens foram realizadas ao longo de <strong>${diasOrdenados.length} campanha(s)</strong>, entre ${diasOrdenados[0].split('-').reverse().join('/')} e ${diasOrdenados[diasOrdenados.length - 1].split('-').reverse().join('/')}.</p>
-  </div>
-
-  <!-- Fotos -->
-  ${fotosHtml}
-
-  <div class="rodape">
-    Relatório gerado automaticamente pelo app Contagem de Capivaras — ${dataHoje}
-  </div>
-
-</body>
-</html>`;
-
-  janela.document.open();
-  janela.document.write(html);
-  janela.document.close();
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
 }

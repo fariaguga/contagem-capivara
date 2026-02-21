@@ -570,3 +570,174 @@ header h1 {
   transition: var(--trans);
 }
 .foto-card .btn-deletar-foto:active { background: #FEF2F2; }
+
+/* ── Laudo Overlay ── */
+#laudo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.laudo-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--borda);
+  flex-shrink: 0;
+}
+.laudo-toolbar-titulo {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--texto);
+}
+.laudo-btn-voltar,
+.laudo-btn-print {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.laudo-btn-voltar {
+  background: var(--borda);
+  color: var(--texto);
+}
+.laudo-btn-print {
+  background: var(--verde);
+  color: #fff;
+}
+.laudo-conteudo {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px;
+}
+
+/* Capa */
+.laudo-capa {
+  text-align: center;
+  padding: 40px 0 30px;
+  border-bottom: 2px solid var(--borda);
+  margin-bottom: 24px;
+}
+.laudo-logo {
+  max-width: 240px;
+  height: auto;
+  margin-bottom: 24px;
+}
+.laudo-capa h1 {
+  font-size: 1.2rem;
+  color: var(--verde);
+  margin-bottom: .3em;
+  line-height: 1.3;
+}
+.laudo-subtitulo {
+  font-size: .9rem;
+  color: var(--texto-sec);
+  margin-bottom: 1.5em;
+}
+.laudo-data {
+  font-size: .85rem;
+  color: var(--texto-sec);
+}
+
+/* Seções */
+.laudo-secao {
+  margin-bottom: 24px;
+}
+.laudo-secao h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--verde);
+  border-bottom: 2px solid var(--verde);
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+.laudo-secao p {
+  font-size: .88rem;
+  line-height: 1.6;
+  color: var(--texto);
+  margin-bottom: 8px;
+  text-align: justify;
+}
+
+/* Tabela */
+.laudo-tabela-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -4px;
+}
+.laudo-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .75rem;
+  min-width: 500px;
+}
+.laudo-tabela th {
+  background: var(--verde);
+  color: #fff;
+  padding: 8px 6px;
+  text-align: center;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.laudo-tabela td {
+  border: 1px solid var(--borda);
+  padding: 6px 4px;
+  text-align: center;
+}
+.laudo-tabela tr:nth-child(even) td { background: #F9FAFB; }
+.laudo-linha-total td {
+  background: #E8F5E9 !important;
+  font-weight: 700;
+}
+
+/* Fotos grid */
+.laudo-fotos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.laudo-foto img {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--borda);
+}
+.laudo-foto figcaption {
+  font-size: .72rem;
+  color: var(--texto-sec);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Rodapé */
+.laudo-rodape {
+  margin-top: 30px;
+  text-align: center;
+  font-size: .72rem;
+  color: var(--texto-sec);
+  border-top: 1px solid var(--borda);
+  padding-top: 12px;
+}
+
+/* Impressão */
+@media print {
+  body > *:not(#laudo-overlay) { display: none !important; }
+  #laudo-overlay { position: static; }
+  .laudo-toolbar { display: none; }
+  .laudo-conteudo { overflow: visible; padding: 0; }
+  .laudo-capa { page-break-after: always; padding: 120px 0; }
+  .laudo-logo { max-width: 320px; }
+  .laudo-capa h1 { font-size: 22pt; }
+  .laudo-subtitulo { font-size: 14pt; }
+  .laudo-secao h2 { font-size: 14pt; }
+  .laudo-secao p { font-size: 11pt; }
+  .laudo-tabela { font-size: 9pt; min-width: 0; }
+  .laudo-fotos-grid { gap: 12px; }
+}
