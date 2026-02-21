@@ -3,7 +3,8 @@
 const db = new Dexie('ContagemAnimaisDB');
 
 db.version(1).stores({
-  registros: '++id, categoria, dataHora, sincronizado'
+  registros: '++id, categoria, dataHora, sincronizado',
+  fotos: '++id, dataHora'
 });
 
 /* ── Faixas etárias fixas ── */
@@ -45,4 +46,18 @@ async function deletarRegistro(id) {
 async function totalDoDia(data) {
   const registros = await listarRegistrosDoDia(data);
   return registros.reduce((soma, r) => soma + r.quantidade, 0);
+}
+
+/* ── Fotos ── */
+
+async function adicionarFoto(foto) {
+  return db.fotos.add(foto);
+}
+
+async function listarTodasFotos() {
+  return db.fotos.orderBy('dataHora').reverse().toArray();
+}
+
+async function deletarFoto(id) {
+  return db.fotos.delete(id);
 }

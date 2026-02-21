@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#2e7d32">
+  <meta name="theme-color" content="#F5F7F6">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Contagem de Capivaras</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png">
@@ -16,11 +16,11 @@
 
   <!-- Header -->
   <header>
-    <h1>Contagem de Capivaras</h1>
-    <div class="status-bar">
-      <div class="gps-status">
+    <div class="header-row">
+      <h1>Contagem de Capivaras</h1>
+      <div class="gps-badge inativo" id="gps-badge">
         <span class="gps-dot" id="gps-dot"></span>
-        <span id="gps-texto">GPS aguardando…</span>
+        <span id="gps-texto">GPS inativo</span>
       </div>
     </div>
   </header>
@@ -28,33 +28,83 @@
   <!-- Tabs -->
   <nav class="tabs">
     <button class="tab-btn ativo" data-tab="contagem">Contagem</button>
+    <button class="tab-btn" data-tab="fotos">Fotos</button>
     <button class="tab-btn" data-tab="historico">Histórico</button>
     <button class="tab-btn" data-tab="exportar">Exportar</button>
   </nav>
 
   <!-- Tela: Contagem -->
   <section id="contagem" class="secao visivel">
-    <div id="categorias-grid" class="categorias-grid"></div>
 
-    <button id="btn-mais-um" class="btn-mais-um" disabled>+1</button>
+    <!-- Segment Control -->
+    <div class="segment-control" id="categorias-grid"></div>
 
-    <div class="registro-quantidade">
-      <input id="input-qtd" type="number" min="1" placeholder="Qtd" inputmode="numeric">
+    <!-- Botão +1 -->
+    <button id="btn-mais-um" class="btn-mais-um" disabled>
+      <span class="plus-icon">+1</span>
+      <span class="plus-label" id="plus-label">Selecione a faixa</span>
+    </button>
+
+    <!-- Quantidade -->
+    <div class="registro-row">
+      <div class="input-group">
+        <label for="input-qtd">Quantidade</label>
+        <input id="input-qtd" type="number" min="1" placeholder="0" inputmode="numeric">
+      </div>
       <button id="btn-registrar" class="btn-registrar" disabled>Registrar</button>
     </div>
 
-    <textarea id="input-obs" class="campo-obs" rows="2" placeholder="Observação (opcional)"></textarea>
-
-    <div class="total-dia">
-      <div class="label">Total hoje</div>
-      <div class="numero" id="total-numero">0</div>
+    <!-- Observação -->
+    <div class="obs-group">
+      <label for="input-obs">Observação</label>
+      <textarea id="input-obs" rows="2" placeholder="Opcional"></textarea>
     </div>
+
+    <!-- Contadores por categoria -->
+    <div class="contadores-row">
+      <div class="contador-mini adulto">
+        <div class="cm-label">Adulto</div>
+        <div class="cm-num" id="cnt-adulto">0</div>
+      </div>
+      <div class="contador-mini jovem">
+        <div class="cm-label">Jovem</div>
+        <div class="cm-num" id="cnt-jovem">0</div>
+      </div>
+      <div class="contador-mini filhote">
+        <div class="cm-label">Filhote</div>
+        <div class="cm-num" id="cnt-filhote">0</div>
+      </div>
+    </div>
+
+    <!-- Total -->
+    <div class="total-card">
+      <div class="total-label">Total hoje</div>
+      <div class="total-numero" id="total-numero">0</div>
+    </div>
+
+  </section>
+
+  <!-- Tela: Fotos -->
+  <section id="fotos" class="secao">
+    <label class="btn-foto-captura" for="input-foto">
+      <span>📷</span> Tirar Foto / Escolher Imagem
+    </label>
+    <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none">
+    <div class="obs-group-foto">
+      <label for="input-legenda-foto">Legenda</label>
+      <textarea id="input-legenda-foto" rows="2" placeholder="Opcional"></textarea>
+    </div>
+    <div id="galeria-fotos" class="galeria-fotos"></div>
+    <p id="sem-fotos" class="sem-registros">Nenhuma foto registrada.</p>
   </section>
 
   <!-- Tela: Histórico -->
   <section id="historico" class="secao">
     <div class="filtro-data">
-      <input type="date" id="input-data">
+      <div class="input-group">
+        <label for="input-data">Data</label>
+        <input type="date" id="input-data">
+      </div>
       <button id="btn-filtrar-data">Filtrar</button>
     </div>
     <ul id="lista-registros" class="lista-registros"></ul>
@@ -62,11 +112,36 @@
 
   <!-- Tela: Exportar -->
   <section id="exportar" class="secao">
-    <p class="export-desc">Exporte seus registros como CSV para usar no Google Sheets ou Excel.</p>
+    <p class="export-desc">Exporte registros ou gere o laudo completo.</p>
     <div class="export-opcoes">
-      <button id="btn-export-hoje" class="btn-export">Exportar — Hoje</button>
-      <button id="btn-export-semana" class="btn-export">Exportar — Última Semana</button>
-      <button id="btn-export-todos" class="btn-export">Exportar — Todos</button>
+      <button id="btn-export-hoje" class="btn-export">
+        <span class="export-icon csv">📄</span>
+        <div class="export-texts">
+          <div class="export-title">Hoje</div>
+          <div class="export-sub">Exportar CSV do dia</div>
+        </div>
+      </button>
+      <button id="btn-export-semana" class="btn-export">
+        <span class="export-icon csv">📄</span>
+        <div class="export-texts">
+          <div class="export-title">Última Semana</div>
+          <div class="export-sub">Exportar CSV dos últimos 7 dias</div>
+        </div>
+      </button>
+      <button id="btn-export-todos" class="btn-export">
+        <span class="export-icon csv">📄</span>
+        <div class="export-texts">
+          <div class="export-title">Todos os Registros</div>
+          <div class="export-sub">Exportar CSV completo</div>
+        </div>
+      </button>
+      <button id="btn-gerar-laudo" class="btn-export">
+        <span class="export-icon pdf">📋</span>
+        <div class="export-texts">
+          <div class="export-title">Gerar Laudo</div>
+          <div class="export-sub">Relatório completo com fotos (PDF)</div>
+        </div>
+      </button>
     </div>
   </section>
 
@@ -77,6 +152,7 @@
   <script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>
   <script src="js/db.js"></script>
   <script src="js/export.js"></script>
+  <script src="js/laudo.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

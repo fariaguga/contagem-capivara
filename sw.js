@@ -1,14 +1,16 @@
-const CACHE_NAME = 'contagem-v2';
+const CACHE_NAME = 'contagem-v5';
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
   './js/db.js',
   './js/export.js',
+  './js/laudo.js',
   './js/app.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/logo-aznunes.jpg',
   'https://unpkg.com/dexie@4.0.11/dist/dexie.min.js'
 ];
 
