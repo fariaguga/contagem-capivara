@@ -17,11 +17,21 @@ function carregarImagemBase64(url) {
 }
 
 async function gerarLaudo() {
+  // Abrir janela IMEDIATAMENTE (antes de qualquer await)
+  // para não ser bloqueado como popup no mobile Safari
+  const janela = window.open('', '_blank');
+  if (!janela) {
+    alert('Permita popups para gerar o laudo.');
+    return;
+  }
+  janela.document.write('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#555"><p>Gerando laudo...</p></body></html>');
+
   const registros = await listarTodosRegistros();
   const fotos = await listarTodasFotos();
   const logoBase64 = await carregarImagemBase64('./icons/logo-aznunes.jpg');
 
   if (registros.length === 0) {
+    janela.close();
     alert('Nenhum registro para gerar o laudo.');
     return;
   }
@@ -293,7 +303,7 @@ async function gerarLaudo() {
 </body>
 </html>`;
 
-  const janela = window.open('', '_blank');
+  janela.document.open();
   janela.document.write(html);
   janela.document.close();
 }
